@@ -1,4 +1,4 @@
-name: Build Android App Final Fix
+name: Build Android App Final Patch
 
 on:
   push:
@@ -28,23 +28,26 @@ jobs:
         run: |
           unzip nim-plus.zip -d extracted_project
 
-      # --- Fix Missing Icons ---
+      # --- Fix 1: Create Missing Icons ---
       - name: Fix Missing Icons
         run: |
-          # Find the res directory path
           RES_PATH=$(find extracted_project -type d -name "res" | head -n 1)
-          echo "Resource path found: $RES_PATH"
-          
-          # Create mipmap directory if it doesn't exist
           mkdir -p "$RES_PATH/mipmap-xxhdpi"
-          
-          # Download a default Android icon
           curl -L -o "$RES_PATH/mipmap-xxhdpi/ic_launcher.png" https://raw.githubusercontent.com/google/material-design-icons/master/android/2x/baseline_android_black_24dp.png
-          
-          # Copy the same icon for the round icon
           cp "$RES_PATH/mipmap-xxhdpi/ic_launcher.png" "$RES_PATH/mipmap-xxhdpi/ic_launcher_round.png"
+          echo "Icons fixed."
+
+      # --- Fix 2: Patch Broken Colors in XML ---
+      - name: Fix Broken XML Attributes
+        run: |
+          echo "Patching ic_vpn_key.xml..."
+          # Find the file and replace the broken color attribute with white
+          find extracted_project -name "ic_vpn_key.xml" -type f -exec sed -i 's|?attr/colorControlNormal|@android:color/white|g' {} +
           
-          echo "Icons created successfully!"
+          # Also replace if it is used without 'attr/' prefix
+          find extracted_project -name "ic_vpn_key.xml" -type f -exec sed -i 's|?colorControlNormal|@android:color/white|g' {} +
+          
+          echo "XML colors fixed."
 
       - name: Build APK
         run: |
