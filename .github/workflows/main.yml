@@ -1,4 +1,4 @@
-name: Build Android App Fixed
+name: Build Android App Final
 
 on:
   push:
@@ -19,11 +19,11 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      # Downgrade Gradle to version 7.6 to fix "HasConvention" error
-      - name: Setup Gradle v7.6
+      # Fix: Setting Gradle exactly to 8.2 as requested by the error log
+      - name: Setup Gradle v8.2
         uses: gradle/actions/setup-gradle@v3
         with:
-          gradle-version: '7.6.3'
+          gradle-version: '8.2'
 
       - name: Unzip Project
         run: |
@@ -33,8 +33,7 @@ jobs:
         run: |
           cd extracted_project/*
           
-          echo "Building with Gradle 7.6.3..."
-          # Using 'gradle' command which now points to version 7.6.3
+          echo "Building with Gradle 8.2..."
           gradle assembleDebug --warning-mode all
 
       - name: Upload APK
