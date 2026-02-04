@@ -1,4 +1,4 @@
-name: Auto-Detect and Build
+name: Build Android App
 
 on:
   push:
@@ -13,38 +13,30 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v3
 
-      - name: Setup Nim
-        uses: jiro4989/setup-nim-action@v1
+      - name: Setup Java
+        uses: actions/setup-java@v3
         with:
-          nim-version: 'stable'
+          distribution: 'temurin'
+          java-version: '17'
 
       - name: Unzip Project
         run: |
           unzip nim-plus.zip -d extracted_project
 
-      - name: Find and Build Nim File
+      - name: Build APK
         run: |
-          # Go to extracted folder
+          # Go to the project folder
           cd extracted_project/*
           
-          echo "Searching for .nim files..."
-          # Find the first .nim file inside any folder (e.g., inside 'app')
-          NIM_FILE=$(find . -name "*.nim" | head -n 1)
+          # Give permission to the build tool
+          chmod +x gradlew
+          
+          # Build the Debug APK
+          ./gradlew assembleDebug
 
-          if [ -n "$NIM_FILE" ]; then
-            echo "Found source file: $NIM_FILE"
-            # Compile it
-            nim c -d:release -o:my-app "$NIM_FILE"
-          else
-            echo "ERROR: No .nim file found in the zip!"
-            # List all files to help debug
-            ls -R
-            exit 1
-          fi
-
-      - name: Upload Build Artifact
+      - name: Upload APK
         uses: actions/upload-artifact@v4
-        if: success()
         with:
-          name: My-Application
-          path: extracted_project/**/my-app
+          name: NimPlus-App
+          # Path to where Gradle saves the APK
+          path: extracted_project/**/build/outputs/apk/debug/*.apk
