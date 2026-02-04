@@ -1,4 +1,4 @@
-name: Build Android App Final
+name: Build Android App Final Fix
 
 on:
   push:
@@ -19,7 +19,6 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      # Fix: Setting Gradle exactly to 8.2 as requested by the error log
       - name: Setup Gradle v8.2
         uses: gradle/actions/setup-gradle@v3
         with:
@@ -29,10 +28,27 @@ jobs:
         run: |
           unzip nim-plus.zip -d extracted_project
 
+      # --- Fix Missing Icons ---
+      - name: Fix Missing Icons
+        run: |
+          # Find the res directory path
+          RES_PATH=$(find extracted_project -type d -name "res" | head -n 1)
+          echo "Resource path found: $RES_PATH"
+          
+          # Create mipmap directory if it doesn't exist
+          mkdir -p "$RES_PATH/mipmap-xxhdpi"
+          
+          # Download a default Android icon
+          curl -L -o "$RES_PATH/mipmap-xxhdpi/ic_launcher.png" https://raw.githubusercontent.com/google/material-design-icons/master/android/2x/baseline_android_black_24dp.png
+          
+          # Copy the same icon for the round icon
+          cp "$RES_PATH/mipmap-xxhdpi/ic_launcher.png" "$RES_PATH/mipmap-xxhdpi/ic_launcher_round.png"
+          
+          echo "Icons created successfully!"
+
       - name: Build APK
         run: |
           cd extracted_project/*
-          
           echo "Building with Gradle 8.2..."
           gradle assembleDebug --warning-mode all
 
